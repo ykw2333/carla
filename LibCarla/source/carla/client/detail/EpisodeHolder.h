@@ -6,10 +6,13 @@
 
 #pragma once
 
+#include "carla/AtomicSharedPtr.h"
 #include "carla/NonCopyable.h"
-#include "carla/client/detail/CachedActorList.h"
-#include "carla/client/detail/Client.h"
-#include "carla/rpc/EpisodeInfo.h"
+#include "carla/RecurrentSharedFuture.h"
+#include "carla/client/Timestamp.h"
+#include "carla/client/detail/CallbackList.h"
+#include "carla/client/detail/Episode.h"
+#include "carla/client/detail/EpisodeState.h"
 
 namespace carla {
 namespace client {
@@ -22,15 +25,19 @@ namespace detail {
   /// The episode state changes in the background each time a world tick is
   /// received. The episode may change with any background update if the
   /// simulator has loaded a new episode.
-  class Episode
-    : public std::enable_shared_from_this<Episode>,
+  class EpisodeHolder
+    : public std::enable_shared_from_this<EpisodeHolder>,
       private NonCopyable {
   public:
 
-    explicit Episode(uint64_t id) : _id(id) {}
+    explicit EpisodeHolder(Client &client);
 
-    auto GetId() const {
-      return GetState()->GetEpisodeId();
+    ~EpisodeHolder();
+
+    void Listen();
+
+    std::shared_ptr<Episode> GetEpisode() {
+      return _episode.load();
     }
 
     std::shared_ptr<const EpisodeState> GetState() const {
@@ -38,33 +45,32 @@ namespace detail {
     }
 
     void RegisterActor(rpc::Actor actor) {
-      _actors.Insert(std::move(actor));
+      GetEpisode()->RegisterActor(std::move(actor));
     }
 
-    template <typename RangeT>
-    std::vector<rpc::Actor> GetActors(Client &client, const RangeT &actor_ids) {
-      auto missing_ids = _actors.GetMissingIds(actor_ids);
-      if (!missing_ids.empty()) {
-        _actors.InsertRange(client.GetActorsById(missing_ids));
-      }
-      return _actors.GetActorsById(actor_ids);
+    std::vector<rpc::Actor> GetActors();
+
+    Timestamp WaitForState(time_duration timeout) {
+      return _timestamp.WaitFor(timeout);
+    }
+
+    void RegisterOnTickEvent(std::function<void(Timestamp)> callback) {
+      _on_tick_callbacks.RegisterCallback(std::move(callback));
     }
 
   private:
 
-    Episode(Client &client, const rpc::EpisodeInfo &info);
-
-    void OnEpisodeStarted();
+    EpisodeHolder(Client &client, const rpc::EpisodeInfo &info);
 
     Client &_client;
 
+    AtomicSharedPtr<Episode> _episode;
+
     AtomicSharedPtr<const EpisodeState> _state;
 
-    CachedActorList _actors;
+    RecurrentSharedFuture<Timestamp> _timestamp;
 
     CallbackList<Timestamp> _on_tick_callbacks;
-
-    RecurrentSharedFuture<Timestamp> _timestamp;
 
     const streaming::Token _token;
   };
