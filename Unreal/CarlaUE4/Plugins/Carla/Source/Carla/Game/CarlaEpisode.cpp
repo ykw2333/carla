@@ -9,6 +9,7 @@
 
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Carla/Util/RandomEngine.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 
 #include "EngineUtils.h"
@@ -37,10 +38,7 @@ static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
 
 UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer),
-    Id([]() {
-  static uint32 COUNTER = 0u;
-  return ++COUNTER;
-} ()) {
+    Id(URandomEngine::GenerateRandomId()) {
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
 }
 
