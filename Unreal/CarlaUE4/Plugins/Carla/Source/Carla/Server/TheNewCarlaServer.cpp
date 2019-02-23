@@ -262,7 +262,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   Server.BindSync("spawn_actor_with_parent", [this](
         cr::ActorDescription Description,
         const cr::Transform &Transform,
-        cr::Actor Parent) -> R<cr::Actor>
+        cr::ActorId ParentId) -> R<cr::Actor>
   {
     REQUIRE_CARLA_EPISODE();
     auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
@@ -274,7 +274,7 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("internal error: actor could not be spawned");
     }
-    auto ParentActorView = Episode->FindActor(Parent.id);
+    auto ParentActorView = Episode->FindActor(ParentId);
     if (!ParentActorView.IsValid())
     {
       RESPOND_ERROR("unable to attach actor: parent actor not found");
@@ -283,10 +283,10 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return Episode->SerializeActor(Result.Value);
   });
 
-  Server.BindSync("destroy_actor", [this](cr::Actor Actor) -> R<void>
+  Server.BindSync("destroy_actor", [this](cr::ActorId ActorId) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(Actor.id);
+    auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to destroy actor: not found");
@@ -299,16 +299,16 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("attach_actors", [this](
-        cr::Actor Child,
-        cr::Actor Parent) -> R<void>
+        cr::ActorId ChildId,
+        cr::ActorId ParentId) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ChildView = Episode->FindActor(Child.id);
+    auto ChildView = Episode->FindActor(ChildId);
     if (!ChildView.IsValid())
     {
       RESPOND_ERROR("unable to attach actor: child actor not found");
     }
-    auto ParentView = Episode->FindActor(Parent.id);
+    auto ParentView = Episode->FindActor(ParentId);
     if (!ParentView.IsValid())
     {
       RESPOND_ERROR("unable to attach actor: parent actor not found");
@@ -320,11 +320,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Server.BindSync("set_actor_location", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         cr::Location Location) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(Actor.id);
+    auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to set actor location: actor not found");
@@ -338,11 +338,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("set_actor_transform", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         cr::Transform Transform) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(Actor.id);
+    auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to set actor transform: actor not found");
@@ -356,11 +356,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("set_actor_velocity", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(Actor.id);
+    auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to set actor velocity: actor not found");
@@ -378,11 +378,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("set_actor_angular_velocity", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(Actor.id);
+    auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to set actor angular velocity: actor not found");
@@ -400,11 +400,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("add_actor_impulse", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(Actor.id);
+    auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to add actor impulse: actor not found");
@@ -422,11 +422,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("set_actor_simulate_physics", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         bool bEnabled) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(Actor.id);
+    auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to set actor simulate physics: actor not found");
@@ -443,11 +443,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   // ~~ Apply control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Server.BindSync("apply_control_to_vehicle", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         cr::VehicleControl Control) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(Actor.id);
+    auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to apply control: actor not found");
@@ -462,11 +462,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("apply_control_to_walker", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         cr::WalkerControl Control) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(Actor.id);
+    auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to apply control: actor not found");
@@ -486,11 +486,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("set_actor_autopilot", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         bool bEnabled) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(Actor.id);
+    auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to set autopilot: actor not found");
@@ -512,11 +512,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   // ~~ Traffic lights ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Server.BindSync("set_traffic_light_state", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         cr::TrafficLightState trafficLightState) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
     {
       RESPOND_ERROR("unable to set state: actor not found");
@@ -531,11 +531,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("set_traffic_light_green_time", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         float GreenTime) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
     {
       RESPOND_ERROR("unable to set green time: actor not found");
@@ -550,11 +550,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("set_traffic_light_yellow_time", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         float YellowTime) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
     {
       RESPOND_ERROR("unable to set yellow time: actor not found");
@@ -569,11 +569,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("set_traffic_light_red_time", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         float RedTime) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
     {
       RESPOND_ERROR("unable to set red time: actor not found");
@@ -588,11 +588,11 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   });
 
   Server.BindSync("freeze_traffic_light", [this](
-        cr::Actor Actor,
+        cr::ActorId ActorId,
         bool Freeze) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->GetActorRegistry().Find(Actor.id);
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
     if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
     {
       RESPOND_ERROR("unable to alter frozen state: actor not found");
