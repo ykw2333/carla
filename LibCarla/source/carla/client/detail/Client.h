@@ -88,7 +88,7 @@ namespace detail {
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
 
-    std::vector<rpc::Actor> GetActorsById(const std::vector<actor_id_type> &ids);
+    std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
     rpc::Actor SpawnActor(
         const rpc::ActorDescription &description,

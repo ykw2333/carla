@@ -165,7 +165,7 @@ namespace detail {
   }
 
   std::vector<rpc::Actor> Client::GetActorsById(
-      const std::vector<actor_id_type> &ids) {
+      const std::vector<ActorId> &ids) {
     using return_t = std::vector<rpc::Actor>;
     return _pimpl->CallAndWait<return_t>("get_actors_by_id", ids);
   }
