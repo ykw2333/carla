@@ -41,6 +41,16 @@ def main():
         # Once we have a client we can retrieve the world that is currently
         # running.
         world = client.get_world()
+        m = world.get_map()
+
+        wps = m.generate_waypoints(0.1)
+        print('draw %d waypoints' % len(wps))
+        for n, wp in enumerate(wps):
+            world.debug.draw_point(wp.transform.location, life_time=5)
+            # if n % 100 == 0:
+            #     time.sleep(0.02)
+
+        return
 
         # The world contains the list blueprints that we can use for adding new
         # actors into the simulation.

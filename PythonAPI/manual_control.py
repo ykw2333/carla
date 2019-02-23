@@ -104,6 +104,7 @@ try:
     from pygame.locals import K_d
     from pygame.locals import K_h
     from pygame.locals import K_m
+    from pygame.locals import K_f
     from pygame.locals import K_p
     from pygame.locals import K_q
     from pygame.locals import K_r
@@ -261,6 +262,10 @@ class KeyboardControl(object):
                     world.next_weather(reverse=True)
                 elif event.key == K_c:
                     world.next_weather()
+                elif event.key == K_f:
+                    settings = world.world.get_settings()
+                    settings.no_rendering_mode = not settings.no_rendering_mode
+                    world.world.apply_settings(settings)
                 elif event.key == K_BACKQUOTE:
                     world.camera_manager.next_sensor()
                 elif event.key > K_0 and event.key <= K_9:

@@ -7,6 +7,8 @@
 #pragma once
 
 #include "carla/Time.h"
+#include "carla/rpc/RPCCallFlag.h"
+#include "carla/rpc/Response.h"
 
 #include <boost/asio/io_service.hpp>
 
@@ -32,7 +34,7 @@ namespace detail {
 
   template <typename R, typename... Args> struct wrapper_function_traits<R (*)(Args...)> {
     using result_type = R;
-    using function_type = std::function<R(Args...)>;
+    using function_type = std::function<R(RPCCallFlag, Args...)>;
     using packaged_task_type = std::packaged_task<R()>;
   };
 
@@ -50,15 +52,24 @@ namespace detail {
     using func_t = typename wrapper_function_traits<F>::function_type;
     using task_t = typename wrapper_function_traits<F>::packaged_task_type;
 
-    return func_t([&io, functor=std::move(functor)](auto && ... args) {
-      // We can pass arguments by ref to the lambda because the task will be
-      // executed before this function exits.
-      task_t task([functor=std::move(functor), &args...]() {
-        return functor(std::forward<decltype(args)>(args)...);
+    return func_t([&io, functor=std::move(functor)](RPCCallFlag call_flag, auto &&... args) -> typename func_t::result_type {
+      auto task = std::make_shared<task_t>([functor=std::move(functor), args...]() {
+        return functor(args...);
       });
-      auto result = task.get_future();
-      io.post([&]() mutable { task(); });
+      auto result = task->get_future();
+      io.post([task=std::move(task)]() mutable { (*task)(); });
+      if (call_flag == RPCCallFlag::Asynchronous) {
+        return ResponseError("result ignored on async call");
+      }
       return result.get();
+    });
+  }
+
+  template <typename F>
+  inline auto WrapAsyncCall(F functor) {
+    using func_t = typename wrapper_function_traits<F>::function_type;
+    return func_t([functor=std::move(functor)](RPCCallFlag, auto &&... args) {
+      return functor(std::forward<decltype(args)>(args)...);
     });
   }
 
@@ -84,7 +95,7 @@ namespace detail {
 
     template <typename Functor>
     void BindAsync(const std::string &name, Functor &&functor) {
-      _server.bind(name, std::forward<Functor>(functor));
+      _server.bind(name, detail::WrapAsyncCall(std::forward<Functor>(functor)));
     }
 
     template <typename Functor>
