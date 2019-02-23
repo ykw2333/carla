@@ -136,6 +136,7 @@ static auto MakeCallback(boost::python::object callback) {
 #include "SensorData.cpp"
 #include "Weather.cpp"
 #include "World.cpp"
+#include "Commands.cpp"
 
 BOOST_PYTHON_MODULE(libcarla) {
   using namespace boost::python;
@@ -152,4 +153,5 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_map();
   export_client();
   export_exception();
+  export_commands();
 }

@@ -291,6 +291,10 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration, follow_id);
   }
 
+  void Client::ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
+    _pimpl->AsyncCall("apply_batch", std::move(commands), do_tick_cue);
+  }
+
   void Client::SendTickCue() {
     _pimpl->AsyncCall("tick_cue");
   }
