@@ -115,6 +115,16 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return carla::version();
   });
 
+  // ~~ Tick ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Server.BindSync("tick_cue", [this]() -> R<void>
+  {
+    ++TickCuesReceived;
+    return R<void>::Success();
+  });
+
+  // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   Server.BindAsync("get_available_maps", [this]() -> R<std::vector<std::string>>
   {
     const auto MapNames = UCarlaStatics::GetAllMapNames();
@@ -127,12 +137,6 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return result;
   });
 
-  Server.BindSync("tick_cue", [this]() -> R<void>
-  {
-    ++TickCuesReceived;
-    return R<void>::Success();
-  });
-
   Server.BindSync("load_new_episode", [this](const std::string &map_name) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
@@ -142,6 +146,8 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     }
     return R<void>::Success();
   });
+
+  // ~~ Episode settings and info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Server.BindSync("get_episode_info", [this]() -> R<cr::EpisodeInfo>
   {
@@ -191,6 +197,8 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return Episode->SerializeActor(ActorView);
   });
 
+  // ~~ Weather ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   Server.BindSync("get_weather_parameters", [this]() -> R<cr::WeatherParameters>
   {
     REQUIRE_CARLA_EPISODE();
@@ -214,6 +222,8 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     Weather->ApplyWeather(weather);
     return R<void>::Success();
   });
+
+  // ~~ Actor operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Server.BindSync("get_actors_by_id", [this](
         const std::vector<FActorView::IdType> &ids) -> R<std::vector<cr::Actor>>
@@ -306,6 +316,8 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     Episode->AttachActors(ChildView.GetActor(), ParentView.GetActor());
     return R<void>::Success();
   });
+
+  // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Server.BindSync("set_actor_location", [this](
         cr::Actor Actor,
@@ -428,6 +440,8 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   });
 
+  // ~~ Apply control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   Server.BindSync("apply_control_to_vehicle", [this](
         cr::Actor Actor,
         cr::VehicleControl Control) -> R<void>
@@ -494,6 +508,8 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     Controller->SetAutopilot(bEnabled);
     return R<void>::Success();
   });
+
+  // ~~ Traffic lights ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Server.BindSync("set_traffic_light_state", [this](
         cr::Actor Actor,
@@ -590,6 +606,8 @@ void FTheNewCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   });
 
+  // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   Server.BindSync("start_recorder", [this](std::string name) -> R<std::string> {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->StartRecorder(name));
@@ -635,6 +653,8 @@ void FTheNewCarlaServer::FPimpl::BindActions()
         duration,
         follow_id));
   });
+
+  // ~~ Draw debug shapes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Server.BindSync("draw_debug_shape", [this](const cr::DebugShape &shape) -> R<void>
   {
