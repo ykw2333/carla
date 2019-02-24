@@ -2,6 +2,7 @@
 
   * Fixed `manual_control.py` and `no_rendering_mode.py` to prevent crashes when used in "no rendering mode"
   * Refactored `no_rendering_mode.py` to improve performance and interface
+  * Extended the Waypoint API with `lane_change`, `lane_type`, `right_lane()` and `left_lane()`
 
 ## CARLA 0.9.3
 
