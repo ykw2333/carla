@@ -19,7 +19,7 @@ namespace client {
 
     using Control = rpc::VehicleControl;
 
-    explicit Vehicle(ActorInitializer init) : Actor(std::move(init)) {}
+    explicit Vehicle(ActorInitializer init);
 
     /// Switch on/off this vehicle's autopilot.
     void SetAutopilot(bool enabled = true);
@@ -44,6 +44,8 @@ namespace client {
     SharedPtr<TrafficLight> GetTrafficLight() const;
 
   private:
+
+    const bool _is_control_sticky;
 
     Control _control;
   };
